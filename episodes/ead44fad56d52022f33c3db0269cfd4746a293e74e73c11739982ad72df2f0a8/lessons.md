@@ -1,20 +1,27 @@
 # Lessons: base58-py-heavy
 
-Lineage `ead44fad56d52022f33c3db0269cfd4746a293e74e73c11739982ad72df2f0a8` on [https://github.com/keis/base58](https://github.com/keis/base58) at `2fae7065e3446e69e5d748c767011f05eee8400e`. 2 published attempts.
+Lineage `ead44fad56d52022f33c3db0269cfd4746a293e74e73c11739982ad72df2f0a8` on [https://github.com/keis/base58](https://github.com/keis/base58) at `2fae7065e3446e69e5d748c767011f05eee8400e`. 3 published attempts.
 
 Figures are copied from Core's published episodes (verdicts from independent replays). Nothing here is estimated.
 
 ## Target perf:check_ir
 
-- Attempts: 2 (2 accepted)
+- Attempts: 3 (3 accepted)
 - Best accepted effect: 17.15% (ratio 0.8285), episode `0742329ad06d`
-- Accepted effects: 17.15%, 10.49%
+- Accepted effects: 17.15%, 10.49%, 4.81%
 - Files changed by accepted candidates: `base58/__init__.py`
-- Median model spend per attempt: 0.1425 USD (over 2 attempts with a recorded cost)
+- Median model spend per attempt: 0.1591 USD (over 3 attempts with a recorded cost)
 
 ## In the agent's own words
 
 The agent's journal entries on this lineage, newest first, verbatim. They are its own notes: claimed, not checked.
+
+> I read base58/__init__.py and lineage_bench.py, then grafted two edits. The first is a cached helper that builds a 256-byte translation table and a valid-character set from the existing decode map, so autofix behaves as before. The second has b58decode_int validate input with one bytes.translate(None, valid) call instead of a dict lookup per character.
+> My sandbox run was accepted, with identical outputs, guard ok, 1 file and 34 lines. Ratios were decode_ir 0.8370, decode_long_ir 0.5188, int_ir 0.8808, check_ir 0.9661, encode_ir 1.0002 and encode_long_ir 1.0010. The session log does not give input lengths or the Python version. The candidate is committed and queued for independent replay, so there is no verdict yet.
+> I believe the per-character work in decoding was the root cost, and long inputs feel it most. Encode looks untouched, as it should be.
+> Next, I would confirm the error message still names the first invalid character in every autofix mode. Then I would look for deadwood in the old decode path. Encode can wait its turn.
+>
+> 2026-10-12, episode `30e4040430de` (accepted)
 
 > I grafted a new inner loop onto b58encode_int in base58/__init__.py, lines 41-49, 9 lines replaced by 20. It now divides by base**2 and emits two bytes per iteration from a table of all digit pairs, lru_cached per alphabet. When the top pair has a zero high digit, its first byte is dropped, so output should match the one-digit loop.
 > My own sandbox run on check_ir was accepted. The guard was ok, 1 files, 23 lines, and outputs were identical. Ratios were 0.5793 on encode_ir, 0.5404 on encode_long_ir, 0.8283 on check_ir and 0.7792 on int_ir. decode_ir was 1.0006 and decode_long_ir was 1.0001, so decode held steady, as expected. I did not record input sizes or the Python version beside these numbers, which is a gap.
